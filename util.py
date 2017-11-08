@@ -2,7 +2,7 @@ import os
 
 
 def load_layers_definition(network_description):
-    """Return a dictionary of layers, with the key is the index of the layer
+    """Return a dictionary of layer_def, with the key is the index of the layer
         value is an array [feature_size, num_feature]
     """
     if os.path.isfile(network_description):
