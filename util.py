@@ -39,6 +39,7 @@ def load_images(data_folder):
             pixel_array = np.fromstring(img.tobytes(), dtype=np.uint8)
             pixel_array = pixel_array.reshape(img.size[1], img.size[0])
             x.append(pixel_array)
+            # Kunal : I did not understand use of the rows below this line
             fname = os.path.basename(f)  # filename format xx_L.png
             letter = fname[-5]  # L is the letter at 5th from the right of filename
             op_array = letter_output[letter]
