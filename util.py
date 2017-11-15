@@ -1,4 +1,7 @@
+import glob
 import os
+import numpy as np
+from PIL import Image
 
 
 def load_layers_definition(network_description):
@@ -18,5 +21,36 @@ def load_layers_definition(network_description):
         IOError('Network description file does not exist')
 
 
-test_layer = load_layers_definition('network_description')
-print test_layer
+letter_output = {'O': [1, 0, 0, 0, 0],
+                 'P': [0, 1, 0, 0, 0],
+                 'Q': [0, 0, 1, 0, 0],
+                 'S': [0, 0, 0, 1, 0],
+                 'W': [0, 0, 0, 0, 1]}
+
+def load_images(data_folder):
+    """Load the images in data folder and return matrix of pixels
+    and matrix output letter as defined above"""
+    files = glob.glob(os.path.join(data_folder, '*.PNG'))
+    x = []
+    y = []
+    for f in files:
+        if os.path.isfile(f):
+            img = Image.open(f).convert('I')
+            pixel_array = np.fromstring(img.tobytes(), dtype=np.uint8)
+            pixel_array = pixel_array.reshape(img.size[1], img.size[0])
+            x.append(pixel_array)
+            fname = os.path.basename(f)  # filename format xx_L.png
+            letter = fname[-5]  # L is the letter at 5th from the right of filename
+            op_array = letter_output[letter]
+            y.append(op_array)
+    return x, y
+
+folder = os.getcwd() + '/data'
+x1, y1 = load_images(folder)
+print x1, y1
+
+
+#test_layer = load_layers_definition('network_description')
+#print test_layer
+
+

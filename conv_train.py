@@ -6,6 +6,7 @@ import util
 
 cost_mode = ['cross', 'cross-l1', 'cross-l2']
 
+
 num_classes = 5  # 5 letters at the output
 image_size = 25  # image size is 25 x 25
 stride = 1
@@ -61,7 +62,7 @@ def build_model(layers_def):
         if len(fn) >= 1:  # This is not the last layer yet
             filter_size = fn[0]
             filter_num = fn[1]
-            if i == 1:  # 1st Layer receive input holder
+            if i == 1:  # 1st Layer receive input holder as input
                 layer = create_conv_layer(
                     input_holder, filter_size, filter_num, 1)
             else:  # 2nd and above layers receive previous layer as input
