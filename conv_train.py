@@ -35,7 +35,7 @@ def create_conv_layer(input_layer, filter_size, num_filters, num_channels):
                                    num_channels, num_filters])
     biases = create_bias(num_filters)
     layer = tf.nn.conv2d(input=input_layer, filter=weights,
-                         strides=[1, 1, 1, 1], padding='SAME')
+                         strides=[1, stride, stride, 1], padding='SAME')
     layer = tf.nn.bias_add(layer, biases)
     # Need the setting for k ?, most the documents say 2 is good
     layer = tf.nn.max_pool(value=layer, ksize=[1, 2, 2, 1],
@@ -98,7 +98,7 @@ def validate_arguments(arguments):
 if __name__ == "__main__":
     cost = ''
     network_description = ''
-    epsilon = ''
+    epsilon = 0.0
     max_updates = 0
     class_letter = ''
     model_file_name = ''
@@ -106,7 +106,7 @@ if __name__ == "__main__":
     if validate_arguments(sys.argv):
         cost = sys.argv[1]
         network_description = sys.argv[2]
-        epsilon = sys.argv[3]
+        epsilon = float(sys.argv[3])
         max_updates = int(sys.argv[4])
         class_letter = sys.argv[5]
         model_file_name = sys.argv[6]

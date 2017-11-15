@@ -21,11 +21,11 @@ def load_layers_definition(network_description):
         IOError('Network description file does not exist')
 
 
-letter_output = {'O': [1, 0, 0, 0, 0],
-                 'P': [0, 1, 0, 0, 0],
-                 'Q': [0, 0, 1, 0, 0],
-                 'S': [0, 0, 0, 1, 0],
-                 'W': [0, 0, 0, 0, 1]}
+letter_output = {'O': [1.0, 0.0, 0.0, 0.0, 0.0],
+                 'P': [0.0, 1.0, 0.0, 0.0, 0.0],
+                 'Q': [0.0, 0.0, 1.0, 0.0, 0.0],
+                 'S': [0.0, 0.0, 0.0, 1.0, 0.0],
+                 'W': [0.0, 0.0, 0.0, 0.0, 1.0]}
 
 def load_images(data_folder):
     """Load the images in data folder and return matrix of pixels
