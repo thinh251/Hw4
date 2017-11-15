@@ -1,10 +1,12 @@
 import random
-
+import os
 import tensorflow as tf
 import sys
 import util
 import numpy as np
 
+
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 cost_mode = ['cross', 'cross-l1', 'cross-l2']
 
@@ -56,23 +58,29 @@ def create_fully_connected_layer(input_layer, input_size, output_size):
     return tf.nn.relu(layer)
 
 
-def build_model(layers_def):
+def create_cnn(layers_def):
     # Convolution Layer
     layer = None
+    filter_num = 0
+    channel_num = 1
     for k in layers_def.keys():
         fn = layers_def[k]
+        filter_size = fn[0]
         if len(fn) > 1:  # This is not the last layer yet
-            filter_size = fn[0]
             filter_num = fn[1]
-            if k == 1:  # 1st Layer receive input holder as input
+            if k == 1:  # 1st layer receive input holder as input
                 layer = create_conv_layer(
-                    input_holder, filter_size, filter_num, 1)
+                    input_holder, filter_size, filter_num, channel_num)
             else:  # 2nd and above layers receive previous layer as input
-                layer = create_conv_layer(layer, filter_size, filter_num, 1)
+                layer = create_conv_layer(layer, filter_size, filter_num,
+                                          channel_num)
         else:  # Last layer in network description file
             layer = create_flatten_layer(layer)
+            layer = create_fully_connected_layer(
+                layer, layer.get_shape()[1:4].num_elements(), filter_size)
             layer = create_fully_connected_layer(layer, filter_size,
                                                  num_classes)
+        channel_num = filter_num
     return layer
 
 
@@ -99,7 +107,7 @@ if __name__ == "__main__":
         cost = sys.argv[1]
         network_description = sys.argv[2]
         epsilon = sys.argv[3]
-        max_updates = sys.argv[4]
+        max_updates = int(sys.argv[4])
         class_letter = sys.argv[5]
         model_file_name = sys.argv[6]
         train_folder_name = sys.argv[7]
@@ -107,7 +115,7 @@ if __name__ == "__main__":
         sys.exit("Invalid Arguments")
 
     layer_def = util.load_layers_definition(network_description)
-    model = build_model(layer_def)
+    model = create_cnn(layer_def)
     y_predict = tf.nn.softmax(model, name='y_predict')
 
     cost_func = tf.nn.softmax_cross_entropy_with_logits(

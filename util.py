@@ -30,18 +30,22 @@ letter_output = {'O': [1, 0, 0, 0, 0],
 def load_images(data_folder):
     """Load the images in data folder and return matrix of pixels
     and matrix output letter as defined above"""
-    files = glob.glob(os.path.join(data_folder, '*.png'))
+    files = glob.glob(os.path.join(data_folder, '*.PNG'))
     x = []
     y = []
     for f in files:
         if os.path.isfile(f):
             img = Image.open(f).convert('L')
-            pixel_array = np.fromstring(img.tobytes(), dtype=np.uint8)
-            pixel_array = pixel_array.reshape(img.size[1], img.size[0])
+            pixel_array = np.copy(list(img.getdata()))
+            # black and white image has 1 channel
+            pixel_array = pixel_array.reshape(img.size[1], img.size[0], 1)
             x.append(pixel_array)
-            # Kunal : I did not understand use of the rows below this line
-            fname = os.path.basename(f)  # filename format xx_L.png
-            letter = fname[-5]  # L is the letter at 5th from the right of filename
+            filename = os.path.basename(f)
+            # filename format xx_L.png, for example "12_O.PNG". So letter O is
+            # at 4th position from the right(from the end of the string)
+            # string[-5] will get character at 4th position started from the
+            # end of the string
+            letter = filename[-5]
             op_array = letter_output[letter]
             y.append(op_array)
     return x, y
