@@ -30,12 +30,12 @@ letter_output = {'O': [1, 0, 0, 0, 0],
 def load_images(data_folder):
     """Load the images in data folder and return matrix of pixels
     and matrix output letter as defined above"""
-    files = glob.glob(os.path.join(data_folder, '*.PNG'))
+    files = glob.glob(os.path.join(data_folder, '*.png'))
     x = []
     y = []
     for f in files:
         if os.path.isfile(f):
-            img = Image.open(f).convert('I')
+            img = Image.open(f).convert('L')
             pixel_array = np.fromstring(img.tobytes(), dtype=np.uint8)
             pixel_array = pixel_array.reshape(img.size[1], img.size[0])
             x.append(pixel_array)
@@ -45,9 +45,9 @@ def load_images(data_folder):
             y.append(op_array)
     return x, y
 
-folder = os.getcwd() + '/data'
-x1, y1 = load_images(folder)
-print x1, y1
+# folder = os.getcwd() + '/data'
+# x1, y1 = load_images(folder)
+# print x1, y1
 
 
 #test_layer = load_layers_definition('network_description')
