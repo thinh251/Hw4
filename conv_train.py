@@ -115,11 +115,11 @@ if __name__ == "__main__":
         sys.exit("Invalid Arguments")
 
     layer_def = util.load_layers_definition(network_description)
-    model = create_cnn(layer_def)
-    y_predict = tf.nn.softmax(model, name='y_predict')
+    cnn = create_cnn(layer_def)
+    y_predict = tf.nn.softmax(cnn, name='y_predict')
 
     cost_func = tf.nn.softmax_cross_entropy_with_logits(
-        logits=model, labels=output_holder)
+        logits=cnn, labels=output_holder)
 
     # TODO : add L1 and L2 regularization
     # if cost == cost_mode[1]: # cross entropy
@@ -179,8 +179,8 @@ if __name__ == "__main__":
                                            output_holder: batch_y})
                 print 'Batch accuracy:', accuracy
                 train_accuracy.append(accuracy)
-        print 'Testing on S[', i, '] data'
-        correct_pred = tf.equal(tf.argmax(model, 1),
+        print 'Validating on S[', i, '] data'
+        correct_pred = tf.equal(tf.argmax(cnn, 1),
                                 tf.argmax(output_holder, 1))
         accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
         accuracy = session.run(accuracy,
@@ -194,4 +194,4 @@ if __name__ == "__main__":
 
     print 'Training and testing completed'
     print 'Avg training accuracy:', np.mean(train_accuracy)
-    print 'Avg testing accuracy:', np.mean(test_accuracy)
+    print 'Avg validating accuracy:', np.mean(test_accuracy)
