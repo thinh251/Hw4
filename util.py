@@ -4,12 +4,19 @@ import numpy as np
 from PIL import Image
 
 
+letter_output = {'O': [1.0, 0.0, 0.0, 0.0, 0.0],
+                 'P': [0.0, 1.0, 0.0, 0.0, 0.0],
+                 'Q': [0.0, 0.0, 1.0, 0.0, 0.0],
+                 'S': [0.0, 0.0, 0.0, 1.0, 0.0],
+                 'W': [0.0, 0.0, 0.0, 0.0, 1.0]}
+
+
 def load_layers_definition(network_description):
     """Return a dictionary of layer_def, with the key is the index of the layer
         value is an array [feature_size, num_feature]
     """
     if os.path.isfile(network_description):
-        layers = dict()
+        layers = dict() # Using dictionaries in python
         with open(network_description) as nd_file:
             layer_index = 1
             for line in nd_file:
@@ -20,12 +27,6 @@ def load_layers_definition(network_description):
     else:
         IOError('Network description file does not exist')
 
-
-letter_output = {'O': [1.0, 0.0, 0.0, 0.0, 0.0],
-                 'P': [0.0, 1.0, 0.0, 0.0, 0.0],
-                 'Q': [0.0, 0.0, 1.0, 0.0, 0.0],
-                 'S': [0.0, 0.0, 0.0, 1.0, 0.0],
-                 'W': [0.0, 0.0, 0.0, 0.0, 1.0]}
 
 def load_images(data_folder):
     """Load the images in data folder and return matrix of pixels
