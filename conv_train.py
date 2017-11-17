@@ -85,8 +85,10 @@ def create_cnn(layers_def):
 
 
 def validate_arguments(arguments):
-    if len(arguments) < 8:
-        print ('Missing arguments')
+    if len(arguments) != 8:
+        print ('7 Arguments expected : <cost> <network_description> <epsilon> '
+               '<max_updates> <class_letter> <model_file_name> '
+               '<train_folder_name>')
         return False
     if not (arguments[1] in cost_mode):
         print 'Invalid cost, supported modes are', cost_mode
