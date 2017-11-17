@@ -39,7 +39,7 @@ def load_images(data_folder):
             img = Image.open(f).convert('L')
             pixel_array = np.copy(list(img.getdata()))
             # black and white image has 1 channel
-            pixel_array = pixel_array.reshape(img.size[1], img.size[0], 1)
+            pixel_array = pixel_array.reshape(img.size[1], img.size[0])
             x.append(pixel_array)
             filename = os.path.basename(f)
             # filename format xx_L.png, for example "12_O.PNG". So letter O is

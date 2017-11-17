@@ -10,7 +10,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 cost_mode = ['cross', 'cross-l1', 'cross-l2']
 
-batch_size = 4
+batch_size = 256
 num_classes = 5  # 5 letters at the output
 image_size = 25  # image size is 25 x 25
 stride = 1
@@ -138,12 +138,13 @@ if __name__ == "__main__":
     row = len(x)
     block = row / 5
     train_accuracy = []
-    test_accuracy = []
+    validation_accuracy = []
+    cost_history = []
     for i in range(5):  # 5-fold
         # Pick the current Si as the subset for testing
         sl_i = slice(i * block, (i + 1) * block)
-        text_x = x[sl_i]
-        test_y = y[sl_i]
+        test_x = np.asarray(x[sl_i])
+        test_y = np.asarray(y[sl_i])
         # test_y = np.split(y, [i*k, (i + 1) * k], axis=0)
         # print 'Test Y:', i, test_y
         train_x = np.delete(x, np.s_[i * block: (i + 1) * block], axis=0)
@@ -167,33 +168,43 @@ if __name__ == "__main__":
             for b in range(0, len(train_x), batch_size):
                 batch_x = train_x[b:b + batch_size]
                 batch_y = train_y[b:b + batch_size]
-                session.run(optimizer,
-                            feed_dict={input_holder: batch_x,
-                                       output_holder: batch_y})
+                # Reshape images data from 3d to 4d array before
+                #  feeding into tensorflow
+                sh = batch_x.shape
+                batch_x = np.reshape(batch_x, (sh[0], sh[1], sh[2], 1))
 
+                feed_data = {input_holder: batch_x, output_holder: batch_y}
+                session.run(optimizer, feed_dict=feed_data)
                 correct_pred = tf.equal(tf.argmax(y_predict, 1),
                                         tf.argmax(output_holder, 1))
                 accuracy = tf.reduce_mean(
                     tf.cast(correct_pred, tf.float32))
-                accuracy = session.run(accuracy,
-                                       feed_dict={
-                                           input_holder: batch_x,
-                                           output_holder: batch_y})
-                print 'Batch accuracy:', accuracy
+                accuracy = session.run(accuracy, feed_dict=feed_data)
                 train_accuracy.append(accuracy)
+                cost_value = session.run(cost, feed_dict=feed_data)
+                cost_history.append(cost_value)
+        print 'Training accuracy:', np.mean(train_accuracy)
+        print 'Training cost:', np.mean(cost_history)
         print 'Validating on S[', i, '] data'
         correct_pred = tf.equal(tf.argmax(cnn, 1),
                                 tf.argmax(output_holder, 1))
         accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
+        # Reshape images data from 3d to 4d array before
+        #  feeding into tensorflow
+        xsh = test_x.shape
+        test_x = np.reshape(test_x, (xsh[0], xsh[1], xsh[2], 1))
+        # test_x = np.reshape(test_x, (len(test_x[0]), len(test_x[1]), 1))
         accuracy = session.run(accuracy,
-                               feed_dict={input_holder: text_x,
+                               feed_dict={input_holder: test_x,
                                           output_holder: test_y})
-        test_accuracy.append(accuracy)
-        # Save the weights at the last fold
-        if i == 4:
-            saver = tf.train.Saver()
-            saver.save(session, model_file_name)
+        validation_accuracy.append(accuracy)
+        print 'Validation accuracy:', np.mean(validation_accuracy)
+        print '-------------------------------'
+    # Save the weights at the last fold
+    saver = tf.train.Saver()
+    saver.save(session, model_file_name)
 
-    print 'Training and testing completed'
+    print 'Training and validation completed'
     print 'Avg training accuracy:', np.mean(train_accuracy)
-    print 'Avg validating accuracy:', np.mean(test_accuracy)
+    print 'Avg validating accuracy:', np.mean(validation_accuracy)
+    print 'Avg cost:', np.mean(cost_history)
