@@ -31,7 +31,7 @@ def load_layers_definition(network_description):
 def load_images(data_folder):
     """Load the images in data folder and return matrix of pixels
     and matrix output letter as defined above"""
-    files = glob.glob(os.path.join(data_folder, '*.PNG'))
+    files = glob.glob(os.path.join(data_folder, '*.png'))
     x = []
     y = []
     for f in files:
