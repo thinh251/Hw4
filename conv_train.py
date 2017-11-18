@@ -104,7 +104,7 @@ def validate_arguments(arguments):
     return True
 
 
-if __name__ == "__main__":
+def train():
     cost = ''
     network_description = ''
     epsilon = 0.0
@@ -133,7 +133,6 @@ if __name__ == "__main__":
     cost_func = tf.nn.sigmoid_cross_entropy_with_logits(
         logits=cnn, labels=output_holder)
 
-    # TODO : double check L1 and L2 with Amer
     if cost == cost_mode[1]:  # cross entropy with L1 regularization
         L1 = tf.contrib.layers.l1_regularizer(scale=0.005, scope=None)
         penalty = tf.contrib.layers.apply_regularization(L1,
@@ -157,6 +156,7 @@ if __name__ == "__main__":
     train_accuracy = []
     validation_accuracy = []
     cost_history = []
+    cost_validation_history = []
     for i in range(5):  # 5-fold
         # Pick the current Si as the subset for testing
         sl_i = slice(i * block, (i + 1) * block)
@@ -202,6 +202,9 @@ if __name__ == "__main__":
                 train_accuracy.append(accuracy)
                 cost_value = session.run(cost, feed_dict=feed_data)
                 cost_history.append(cost_value)
+                # if e%10 ==0 :
+                #     print "max updates : "+ str(e)
+                #     print 'Training cost:', np.mean(train_accuracy)
         print 'Training accuracy:', np.mean(train_accuracy)
         print 'Training cost:', np.mean(cost_history)
         print 'Validating on S[', i, '] data'
@@ -220,13 +223,23 @@ if __name__ == "__main__":
                                feed_dict={input_holder: test_x,
                                           output_holder: test_y})
         validation_accuracy.append(accuracy)
+        cost_validation = session.run(cost,feed_dict={input_holder: test_x,
+                                                      output_holder: test_y})
+        cost_validation_history.append(cost_validation)
+        print "Validation Cost: ",cost_validation
         print 'Validation accuracy:', np.mean(validation_accuracy)
         print '-------------------------------'
+
     # Save the weights at the last fold
     saver = tf.train.Saver()
     saver.save(session, model_file_name)
 
     print 'Training and validation completed'
     print 'Avg training accuracy:', np.mean(train_accuracy)
-    print 'Avg validating accuracy:', np.mean(validation_accuracy)
-    print 'Avg cost:', np.mean(cost_history)
+    print 'Avg Training cost:', np.mean(cost_history)
+    print 'Avg Validation accuracy:', np.mean(validation_accuracy)
+    print 'Avg Validation cost: ',np.mean(cost_validation_history)
+    return (max_updates,np.mean(cost_history),np.mean(cost_validation_history))
+train()
+
+
