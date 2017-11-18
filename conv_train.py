@@ -21,10 +21,13 @@ input_holder = tf.placeholder(tf.float32, [None, image_size, image_size, 1],
                               name='x')
 output_holder = tf.placeholder(tf.float32, [None, 1], name='y')
 # output_holder = tf.placeholder(tf.float32, [None, num_classes], name='y')
+weights = []  # Store the weights to apply L1, L2 if needed
 
 
 def create_weight(shape):
-    return tf.Variable(tf.truncated_normal(shape))
+    w = tf.Variable(tf.truncated_normal(shape))
+    weights.append(w)
+    return w
 
 
 def create_bias(size):
@@ -33,10 +36,10 @@ def create_bias(size):
 
 
 def create_conv_layer(input_layer, filter_size, num_filters, num_channels):
-    weights = create_weight(shape=[filter_size, filter_size,
-                                   num_channels, num_filters])
+    w = create_weight(shape=[filter_size, filter_size,
+                             num_channels, num_filters])
     biases = create_bias(num_filters)
-    layer = tf.nn.conv2d(input=input_layer, filter=weights,
+    layer = tf.nn.conv2d(input=input_layer, filter=w,
                          strides=[1, stride, stride, 1], padding='SAME')
     layer = tf.nn.bias_add(layer, biases)
     # Need the setting for k ?, most the documents say 2 is good
@@ -54,9 +57,9 @@ def create_flatten_layer(layer):
 
 
 def create_fully_connected_layer(input_layer, input_size, output_size):
-    weights = create_weight(shape=[input_size, output_size])
+    w = create_weight(shape=[input_size, output_size])
     biases = create_bias(output_size)
-    layer = tf.matmul(input_layer, weights) + biases
+    layer = tf.matmul(input_layer, w) + biases
     # return tf.nn.relu(layer)
     return tf.nn.sigmoid(layer)
 
@@ -65,7 +68,7 @@ def create_cnn(layers_def):
     # Convolution Layer
     layer = None
     filter_num = 0
-    channel_num = 1
+    channel_num = 1  # First layer receive 1 channel from black/white images
     for k in layers_def.keys():
         fn = layers_def[k]
         filter_size = fn[0]
@@ -130,11 +133,17 @@ if __name__ == "__main__":
     cost_func = tf.nn.sigmoid_cross_entropy_with_logits(
         logits=cnn, labels=output_holder)
 
-    # TODO : add L1 and L2 regularization
-    # if cost == cost_mode[1]: # cross entropy
-    #     cost_func =
-    # elif cost == cost[1]: #cross entropy with L1 regularization
-    #     cost_func = tf.nn.soft
+    # TODO : double check L1 and L2 with Amer
+    if cost == cost_mode[1]:  # cross entropy with L1 regularization
+        L1 = tf.contrib.layers.l1_regularizer(scale=0.005, scope=None)
+        penalty = tf.contrib.layers.apply_regularization(L1,
+                                                         weights_list=weights)
+        cost_func = cost_func + penalty
+    elif cost == cost_mode[2]:  # cross entropy with L2 regularization
+        L2 = tf.contrib.layers.l2_regularizer(scale=0.005, scope=None)
+        penalty = tf.contrib.layers.apply_regularization(L2,
+                                                         weights_list=weights)
+        cost_func = cost_func + penalty
     cost = tf.reduce_mean(cost_func)
     optimizer = tf.train.GradientDescentOptimizer(epsilon).minimize(cost)
     session = tf.Session()
@@ -143,6 +152,7 @@ if __name__ == "__main__":
 
     x, y = util.load_images(train_folder_name, class_letter)
     row = len(x)
+    # split data set to 5 partitions for cross validation
     block = row / 5
     train_accuracy = []
     validation_accuracy = []
