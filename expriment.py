@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import subprocess
 import sys
+import util
+import sklearn
 
 if not conv_train.validate_arguments(sys.argv):
     sys.exit("Invalid arguments")
@@ -38,3 +40,4 @@ validation_line, = plt.plot(x_value,z_value,color='green',label="Validation "
          linestyle='dashed')
 plt.legend(handles=[training_line,validation_line],loc=2)
 plt.show()
+
