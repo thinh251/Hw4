@@ -14,11 +14,13 @@ batch_size = 256
 num_classes = 5  # 5 letters at the output
 image_size = 25  # image size is 25 x 25
 stride = 1
+threshold = 0.5
 
 # tf Graph input
 input_holder = tf.placeholder(tf.float32, [None, image_size, image_size, 1],
                               name='x')
-output_holder = tf.placeholder(tf.float32, [None, num_classes], name='y')
+output_holder = tf.placeholder(tf.float32, [None, 1], name='y')
+# output_holder = tf.placeholder(tf.float32, [None, num_classes], name='y')
 
 
 def create_weight(shape):
@@ -55,7 +57,8 @@ def create_fully_connected_layer(input_layer, input_size, output_size):
     weights = create_weight(shape=[input_size, output_size])
     biases = create_bias(output_size)
     layer = tf.matmul(input_layer, weights) + biases
-    return tf.nn.relu(layer)
+    # return tf.nn.relu(layer)
+    return tf.nn.sigmoid(layer)
 
 
 def create_cnn(layers_def):
@@ -78,8 +81,9 @@ def create_cnn(layers_def):
             layer = create_flatten_layer(layer)
             layer = create_fully_connected_layer(
                 layer, layer.get_shape()[1:4].num_elements(), filter_size)
-            layer = create_fully_connected_layer(layer, filter_size,
-                                                 num_classes)
+            # layer = create_fully_connected_layer(layer, filter_size,
+            #                                      num_classes)
+            layer = create_fully_connected_layer(layer, filter_size, 1)
         channel_num = filter_num
     return layer
 
@@ -110,7 +114,7 @@ if __name__ == "__main__":
         network_description = sys.argv[2]
         epsilon = float(sys.argv[3])
         max_updates = int(sys.argv[4])
-        class_letter = sys.argv[5]
+        class_letter = sys.argv[5].strip()
         model_file_name = sys.argv[6]
         train_folder_name = sys.argv[7]
     else:
@@ -118,9 +122,12 @@ if __name__ == "__main__":
 
     layer_def = util.load_layers_definition(network_description)
     cnn = create_cnn(layer_def)
-    y_predict = tf.nn.softmax(cnn, name='y_predict')
+    # y_predict = tf.nn.softmax(cnn, name='y_predict')
+    # y_predict = tf.nn.sigmoid(cnn, name='y_predict')
 
-    cost_func = tf.nn.softmax_cross_entropy_with_logits(
+    # cost_func = tf.nn.softmax_cross_entropy_with_logits(
+    #     logits=cnn, labels=output_holder)
+    cost_func = tf.nn.sigmoid_cross_entropy_with_logits(
         logits=cnn, labels=output_holder)
 
     # TODO : add L1 and L2 regularization
@@ -134,7 +141,7 @@ if __name__ == "__main__":
     init = tf.global_variables_initializer()
     session.run(init)
 
-    x, y = util.load_images(train_folder_name)
+    x, y = util.load_images(train_folder_name, class_letter)
     row = len(x)
     block = row / 5
     train_accuracy = []
@@ -172,27 +179,32 @@ if __name__ == "__main__":
                 #  feeding into tensorflow
                 sh = batch_x.shape
                 batch_x = np.reshape(batch_x, (sh[0], sh[1], sh[2], 1))
-
+                batch_y = np.reshape(batch_y, (len(batch_y), 1))
                 feed_data = {input_holder: batch_x, output_holder: batch_y}
                 session.run(optimizer, feed_dict=feed_data)
-                correct_pred = tf.equal(tf.argmax(y_predict, 1),
-                                        tf.argmax(output_holder, 1))
-                accuracy = tf.reduce_mean(
-                    tf.cast(correct_pred, tf.float32))
+                # correct_pred = tf.equal(tf.argmax(cnn, 1),
+                #                         tf.argmax(output_holder, 1))
+                predict = tf.greater(cnn, threshold)
+                correct_pred = tf.equal(predict, tf.equal(output_holder, 1.0))
+                accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
                 accuracy = session.run(accuracy, feed_dict=feed_data)
+                # print 'Batch accuracy:', accuracy
                 train_accuracy.append(accuracy)
                 cost_value = session.run(cost, feed_dict=feed_data)
                 cost_history.append(cost_value)
         print 'Training accuracy:', np.mean(train_accuracy)
         print 'Training cost:', np.mean(cost_history)
         print 'Validating on S[', i, '] data'
-        correct_pred = tf.equal(tf.argmax(cnn, 1),
-                                tf.argmax(output_holder, 1))
+        # correct_pred = tf.equal(tf.argmax(cnn, 1),
+        #                         tf.argmax(output_holder, 1))
+        predict = tf.greater(cnn, threshold)
+        correct_pred = tf.equal(predict, tf.equal(output_holder, 1.0))
         accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
         # Reshape images data from 3d to 4d array before
         #  feeding into tensorflow
         xsh = test_x.shape
         test_x = np.reshape(test_x, (xsh[0], xsh[1], xsh[2], 1))
+        test_y = np.reshape(test_y, (len(test_y), 1))
         # test_x = np.reshape(test_x, (len(test_x[0]), len(test_x[1]), 1))
         accuracy = session.run(accuracy,
                                feed_dict={input_holder: test_x,
