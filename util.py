@@ -2,6 +2,9 @@ import glob
 import os
 import numpy as np
 from PIL import Image
+import sys
+import matplotlib.pyplot as plt
+
 
 
 letter_output = {'O': [1.0, 0.0, 0.0, 0.0, 0.0],
@@ -61,5 +64,25 @@ def load_images(data_folder, letter):
 
 #test_layer = load_layers_definition('network_description')
 #print test_layer
+
+def calculate_confusion_matrix(estimated_output,actual_output):
+    if len(estimated_output) == len(actual_output):
+        sys.exit("Arguments passed to 'calculate_confusion_matrix' method are not same")
+    TP = 0.0
+    TN = 0.0
+    FP = 0.0
+    FN = 0.0
+    for i in range(len(estimated_output)):
+        if estimated_output[i] == 1 and actual_output[i] == 1:
+            TP += 1
+        if estimated_output[i] == 0 and actual_output[i] == 0:
+            TN += 1
+        if estimated_output[i] == 1 and actual_output[i] == 0:
+            FP += 1
+        if estimated_output[i] == 0 and actual_output[i] == 1:
+            FN += 1
+    confusion_matrix =  ((TP/(TP+FN)),(TN/(TN+FP)),(FP/(FP+TN)),(FN/(FN+TP)))
+    return confusion_matrix
+
 
 
