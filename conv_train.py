@@ -227,7 +227,7 @@ def train(cost, network_description, epsilon, max_updates, class_letter,
     # return (max_updates,np.mean(cost_history),np.mean(cost_validation_history))
 
 
-def test(network_def, model_file, test_folder):
+def test(network_def, model_file, test_folder, class_letter):
     layer_def = util.load_layers_definition(network_def)
     cnn = create_cnn(layer_def)
     predict = tf.greater(cnn, threshold)
@@ -244,7 +244,7 @@ def test(network_def, model_file, test_folder):
     saver = tf.train.Saver()
     saver.restore(session, model_file)
 
-    test_x, test_y = util.load_images(test_folder, letter=None)
+    test_x, test_y = util.load_images(test_folder, class_letter)
     test_x = np.asarray(test_x, dtype=float)
     test_y = np.asarray(test_y)
     xsh = test_x.shape
@@ -300,7 +300,7 @@ if __name__ == "__main__":
         sys.exit("Invalid Arguments")
 
     if mode == supported_modes[3]:
-        test(network_description, model_file_name, data_folder)
+        test(network_description, model_file_name, data_folder, class_letter)
     else:
         train(mode, network_description, epsilon, max_updates, class_letter,
               model_file_name, data_folder)

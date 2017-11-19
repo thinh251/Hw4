@@ -32,7 +32,7 @@ def load_layers_definition(network_description):
         IOError('Network description file does not exist')
 
 
-def load_images(data_folder, letter=None):
+def load_images(data_folder, letter):
     """Load the images in data folder and return matrix of pixels
     and matrix output letter as defined above"""
     files = glob.glob(os.path.join(data_folder, '*.png'))
@@ -56,8 +56,6 @@ def load_images(data_folder, letter=None):
                     y.append(1.0)
                 else:
                     y.append(0.0)
-            else:
-                y.append(1.0)
     return x, y
 
 # folder = os.getcwd() + '/data'
