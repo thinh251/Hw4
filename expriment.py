@@ -19,7 +19,10 @@ for i in range(1,int(sys.argv[4])):
     print " for max updates : ",i*10
     print "-------------------------------------------"
     sys.argv[4] = i*10
-    results.append(conv_train.train())
+    results.append(conv_train.train(sys.argv[1], sys.argv[2],
+                                    float(sys.argv[3]),
+                                    int(sys.argv[4]), sys.argv[5].strip(),
+          sys.argv[6], sys.argv[7]))
     b = start = datetime.datetime.now()
     print "Time required for this step: "+str(b-a)
 
@@ -45,5 +48,5 @@ validation_line, = plt.plot(x_value,z_value,color='green',label="Validation "
 plt.legend(handles=[training_line,validation_line],loc=2)
 end = datetime.datetime.now()
 print "Total time required "+str(end-start)
-plt.show()
+plt.savefig("Q1. for '"+sys.argv[5].strip()+", cost function:"+sys.argv[1])
 
