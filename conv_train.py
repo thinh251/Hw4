@@ -8,7 +8,7 @@ import numpy as np
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
-cost_mode = ['cross', 'cross-l1', 'cross-l2']
+supported_modes = ['cross', 'cross-l1', 'cross-l2', 'ctest']
 
 batch_size = 256
 num_classes = 5  # 5 letters at the output
@@ -18,8 +18,8 @@ threshold = 0.5
 
 # tf Graph input
 input_holder = tf.placeholder(tf.float32, [None, image_size, image_size, 1],
-                              name='x')
-output_holder = tf.placeholder(tf.float32, [None, 1], name='y')
+                              name='i')
+output_holder = tf.placeholder(tf.float32, [None, 1], name='o')
 # output_holder = tf.placeholder(tf.float32, [None, num_classes], name='y')
 weights = []  # Store the weights to apply L1, L2 if needed
 
@@ -93,36 +93,19 @@ def create_cnn(layers_def):
 
 def validate_arguments(arguments):
     if len(arguments) != 8:
-        print ('7 Arguments expected : <cost> <network_description> <epsilon> '
+        print ('7 Arguments expected : <mode> <network_description> <epsilon> '
                '<max_updates> <class_letter> <model_file_name> '
-               '<train_folder_name>')
+               '<data_folder>')
         return False
-    if not (arguments[1] in cost_mode):
-        print 'Invalid cost, supported modes are', cost_mode
+    if not (arguments[1] in supported_modes):
+        print 'Invalid mode, supported supported_modes are', supported_modes
         return False
     # TODO : add more detail for argument validation
     return True
 
 
-def train():
-    cost = ''
-    network_description = ''
-    epsilon = 0.0
-    max_updates = 0
-    class_letter = ''
-    model_file_name = ''
-    train_folder_name = ''
-    if validate_arguments(sys.argv):
-        cost = sys.argv[1]
-        network_description = sys.argv[2]
-        epsilon = float(sys.argv[3])
-        max_updates = int(sys.argv[4])
-        class_letter = sys.argv[5].strip()
-        model_file_name = sys.argv[6]
-        train_folder_name = sys.argv[7]
-    else:
-        sys.exit("Invalid Arguments")
-
+def train(cost, network_description, epsilon, max_updates, class_letter,
+          model_file_name, train_folder_name):
     layer_def = util.load_layers_definition(network_description)
     cnn = create_cnn(layer_def)
     # y_predict = tf.nn.softmax(cnn, name='y_predict')
@@ -133,12 +116,12 @@ def train():
     cost_func = tf.nn.sigmoid_cross_entropy_with_logits(
         logits=cnn, labels=output_holder)
 
-    if cost == cost_mode[1]:  # cross entropy with L1 regularization
+    if cost == supported_modes[1]:  # cross entropy with L1 regularization
         L1 = tf.contrib.layers.l1_regularizer(scale=0.005, scope=None)
         penalty = tf.contrib.layers.apply_regularization(L1,
                                                          weights_list=weights)
         cost_func = cost_func + penalty
-    elif cost == cost_mode[2]:  # cross entropy with L2 regularization
+    elif cost == supported_modes[2]:  # cross entropy with L2 regularization
         L2 = tf.contrib.layers.l2_regularizer(scale=0.005, scope=None)
         penalty = tf.contrib.layers.apply_regularization(L2,
                                                          weights_list=weights)
@@ -204,15 +187,16 @@ def train():
                 cost_history.append(cost_value)
                 # if e%10 ==0 :
                 #     print "max updates : "+ str(e)
-                #     print 'Training cost:', np.mean(train_accuracy)
+                #     print 'Training mode:', np.mean(train_accuracy)
         print 'Training accuracy:', np.mean(train_accuracy)
-        print 'Training cost:', np.mean(cost_history)
+        print 'Training mode:', np.mean(cost_history)
         print 'Validating on S[', i, '] data'
         # correct_pred = tf.equal(tf.argmax(cnn, 1),
         #                         tf.argmax(output_holder, 1))
         predict = tf.greater(cnn, threshold)
         correct_pred = tf.equal(predict, tf.equal(output_holder, 1.0))
-        accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
+        accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32),
+                                  name="accuracy-check")
         # Reshape images data from 3d to 4d array before
         #  feeding into tensorflow
         xsh = test_x.shape
@@ -226,7 +210,7 @@ def train():
         cost_validation = session.run(cost,feed_dict={input_holder: test_x,
                                                       output_holder: test_y})
         cost_validation_history.append(cost_validation)
-        print "Validation Cost: ",cost_validation
+        print "Validation Cost: ", cost_validation
         print 'Validation accuracy:', np.mean(validation_accuracy)
         print '-------------------------------'
 
@@ -236,10 +220,89 @@ def train():
 
     print 'Training and validation completed'
     print 'Avg training accuracy:', np.mean(train_accuracy)
-    print 'Avg Training cost:', np.mean(cost_history)
+    print 'Avg Training mode:', np.mean(cost_history)
     print 'Avg Validation accuracy:', np.mean(validation_accuracy)
-    print 'Avg Validation cost: ',np.mean(cost_validation_history)
-    return (max_updates,np.mean(cost_history),np.mean(cost_validation_history))
-train()
+    print 'Avg Validation mode: ',np.mean(cost_validation_history)
+    session.close()
+    # return (max_updates,np.mean(cost_history),np.mean(cost_validation_history))
+
+
+def test(network_def, model_file, test_folder):
+    layer_def = util.load_layers_definition(network_def)
+    cnn = create_cnn(layer_def)
+    predict = tf.greater(cnn, threshold)
+    correct_pred = tf.equal(predict, tf.equal(output_holder, 1.0))
+    accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32),
+                              name="accuracy-check")
+    session = tf.Session()
+    init = tf.global_variables_initializer()
+    session.run(init)
+
+    # Load model file which is saved from training step
+    # saver = tf.train.import_meta_graph(model_file + '.meta')
+    # saver.restore(session, tf.train.latest_checkpoint('./'))
+    saver = tf.train.Saver()
+    saver.restore(session, model_file)
+
+    test_x, test_y = util.load_images(test_folder, letter=None)
+    test_x = np.asarray(test_x, dtype=float)
+    test_y = np.asarray(test_y)
+    xsh = test_x.shape
+    test_x = np.reshape(test_x, (xsh[0], xsh[1], xsh[2], 1))
+    test_y = np.reshape(test_y, (len(test_y), 1), float)
+
+    test_accuracy = session.run(accuracy, feed_dict={input_holder: test_x,
+                                                     output_holder: test_y})
+    print 'Test accuracy:', test_accuracy
+
+
+def test_graph(network_def, model_file, test_folder):
+    # saver = tf.train.Saver()
+    # init = tf.global_variables_initializer()
+    # test_x, test_y = util.load_images(test_folder, by_letter=False)
+    test_x, test_y = util.load_images(test_folder, letter=None)
+    test_x = np.asarray(test_x, dtype=float)
+    test_y = np.asarray(test_y)
+    xsh = test_x.shape
+    test_x = np.reshape(test_x, (xsh[0], xsh[1], xsh[2], 1))
+    test_y = np.reshape(test_y, (len(test_y), 1), float)
+    session = tf.Session()
+    # session.run(init)
+    saver = tf.train.import_meta_graph(model_file + ".meta")
+    saver.restore(session, tf.train.latest_checkpoint('./'))
+    graph = tf.get_default_graph()
+    x = graph.get_tensor_by_name("i:0")
+    y = graph.get_tensor_by_name("o:0")
+    op_to_restore = graph.get_operation_by_name("accuracy-check")
+    test_accuracy = session.run(op_to_restore, feed_dict={
+            x: test_x, y: test_y})
+    print 'Test accuracy:', test_accuracy
+    session.close()
+
+
+if __name__ == "__main__":
+    mode = ''
+    network_description = ''
+    epsilon = 0.0
+    max_updates = 0
+    class_letter = ''
+    model_file_name = ''
+    data_folder = ''
+    if validate_arguments(sys.argv):
+        mode = sys.argv[1]
+        network_description = sys.argv[2]
+        epsilon = float(sys.argv[3])
+        max_updates = int(sys.argv[4])
+        class_letter = sys.argv[5].strip()
+        model_file_name = sys.argv[6]
+        data_folder = sys.argv[7]
+    else:
+        sys.exit("Invalid Arguments")
+
+    if mode == supported_modes[3]:
+        test(network_description, model_file_name, data_folder)
+    else:
+        train(mode, network_description, epsilon, max_updates, class_letter,
+              model_file_name, data_folder)
 
 

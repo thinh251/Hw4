@@ -32,7 +32,7 @@ def load_layers_definition(network_description):
         IOError('Network description file does not exist')
 
 
-def load_images(data_folder, letter):
+def load_images(data_folder, letter=None):
     """Load the images in data folder and return matrix of pixels
     and matrix output letter as defined above"""
     files = glob.glob(os.path.join(data_folder, '*.png'))
@@ -51,10 +51,13 @@ def load_images(data_folder, letter):
             # string[-5] will get character at 4th position started from the
             # end of the string
             letter_from_filename = filename[-5]
-            if letter == letter_from_filename:
-                y.append(1.0)
+            if letter is not None:
+                if letter == letter_from_filename:
+                    y.append(1.0)
+                else:
+                    y.append(0.0)
             else:
-                y.append(0.0)
+                y.append(1.0)
     return x, y
 
 # folder = os.getcwd() + '/data'
