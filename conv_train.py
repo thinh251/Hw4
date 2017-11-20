@@ -4,6 +4,7 @@ import tensorflow as tf
 import sys
 import util
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
@@ -50,7 +51,6 @@ def create_conv_layer(input_layer, filter_size, num_filters, num_channels):
 
 def create_flatten_layer(layer):
     shape = layer.get_shape()
-    # TODO: have to understand the magic here
     num_features = shape[1:4].num_elements()
     layer = tf.reshape(layer, [-1, num_features])
     return layer
@@ -89,6 +89,22 @@ def create_cnn(layers_def):
             layer = create_fully_connected_layer(layer, filter_size, 1)
         channel_num = filter_num
     return layer
+
+
+def graph(x, y1, y2):
+    # plt.title(title)
+    plt.xlabel("Max Updates")
+    plt.ylabel("Cost")
+    # plt.plot(x, y, color='blue', label="Training Cost", linestyle='dashed')
+    training_line, = plt.plot(x, y1, color='blue',
+                              label="Training Cost",
+                              linestyle='dashed')
+    validation_line, = plt.plot(x, y2, color='green',
+                                label="Validation "
+                                      "Cost",
+                                linestyle='dashed')
+    plt.legend(handles=[training_line, validation_line], loc=2)
+    plt.show()
 
 
 def validate_arguments(arguments):
@@ -140,6 +156,9 @@ def train(cost, network_description, epsilon, max_updates, class_letter,
     validation_accuracy = []
     cost_history = []
     cost_validation_history = []
+    tg = []  # to draw training graph
+    s = []  # step in training graph
+    vg = []   #to draw validation graph
     for i in range(5):  # 5-fold
         # Pick the current Si as the subset for testing
         sl_i = slice(i * block, (i + 1) * block)
@@ -152,7 +171,9 @@ def train(cost, network_description, epsilon, max_updates, class_letter,
         train_y = np.delete(y, np.s_[i * block: (i + 1) * block], axis=0)
         # print 'Train Y:', i, train_y
         print 'Training on Si except S[', i, ']'
+        cost_per_epoch_history = []
         for e in range(max_updates):  # an update is an epoch
+
             # shuffle the data before training
             for r in range(0, len(train_x)):
                 try:
@@ -184,10 +205,14 @@ def train(cost, network_description, epsilon, max_updates, class_letter,
                 # print 'Batch accuracy:', accuracy
                 train_accuracy.append(accuracy)
                 cost_value = session.run(cost, feed_dict=feed_data)
+
                 cost_history.append(cost_value)
+                cost_per_epoch_history.append(cost_value)
                 # if e%10 ==0 :
                 #     print "max updates : "+ str(e)
                 #     print 'Training mode:', np.mean(train_accuracy)
+        tg.append(np.mean(cost_per_epoch_history))
+        s.append((i + 1) * max_updates)
         print 'Training accuracy:', np.mean(train_accuracy)
         print 'Training mode:', np.mean(cost_history)
         print 'Validating on S[', i, '] data'
@@ -207,9 +232,10 @@ def train(cost, network_description, epsilon, max_updates, class_letter,
                                feed_dict={input_holder: test_x,
                                           output_holder: test_y})
         validation_accuracy.append(accuracy)
-        cost_validation = session.run(cost,feed_dict={input_holder: test_x,
-                                                      output_holder: test_y})
+        cost_validation = session.run(cost, feed_dict={input_holder: test_x,
+                                                       output_holder: test_y})
         cost_validation_history.append(cost_validation)
+        vg.append(i)
         print "Validation Cost: ", cost_validation
         print 'Validation accuracy:', np.mean(validation_accuracy)
         print '-------------------------------'
@@ -223,11 +249,13 @@ def train(cost, network_description, epsilon, max_updates, class_letter,
     print 'Avg Training mode:', np.mean(cost_history)
     print 'Avg Validation accuracy:', np.mean(validation_accuracy)
     print 'Avg Validation mode: ',np.mean(cost_validation_history)
+
     session.close()
-    # return (max_updates,np.mean(cost_history),np.mean(cost_validation_history))
+    graph(s, tg, cost_per_epoch_history)
+    # graph(vg, cost_validation_history, "Validation cost graph")
 
 
-def test(network_def, model_file, test_folder, class_letter):
+def test(network_def, model_file, test_folder, letter):
     layer_def = util.load_layers_definition(network_def)
     cnn = create_cnn(layer_def)
     predict = tf.greater(cnn, threshold)
@@ -235,16 +263,10 @@ def test(network_def, model_file, test_folder, class_letter):
     accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32),
                               name="accuracy-check")
     session = tf.Session()
-    init = tf.global_variables_initializer()
-    session.run(init)
-
-    # Load model file which is saved from training step
-    # saver = tf.train.import_meta_graph(model_file + '.meta')
-    # saver.restore(session, tf.train.latest_checkpoint('./'))
     saver = tf.train.Saver()
     saver.restore(session, model_file)
 
-    test_x, test_y = util.load_images(test_folder, class_letter)
+    test_x, test_y = util.load_images(test_folder, letter)
     test_x = np.asarray(test_x, dtype=float)
     test_y = np.asarray(test_y)
     xsh = test_x.shape
