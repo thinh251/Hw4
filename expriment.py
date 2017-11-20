@@ -16,7 +16,7 @@ for i in range(1,int(sys.argv[4])):
     a = datetime.datetime.now()
     print "-------------------------------------------"
     print "-------------------------------------------"
-    print " for max updates : ",i*10
+    print " for max updates : ",i*5
     print "-------------------------------------------"
     sys.argv[4] = i*5
     results.append(conv_train.train(sys.argv[1], sys.argv[2],
