@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
-supported_modes = ['cross', 'cross-l1', 'cross-l2', 'ctest']
+supported_modes = ['cross', 'cross-l1', 'cross-l2', 'test']
 
 batch_size = 256
 num_classes = 5  # 5 letters at the output
@@ -214,7 +214,7 @@ def train(cost, network_description, epsilon, max_updates, class_letter,
         tg.append(np.mean(cost_per_epoch_history))
         s.append((i + 1) * max_updates)
         print 'Training accuracy:', np.mean(train_accuracy)
-        print 'Training mode:', np.mean(cost_history)
+        print 'Training Cost:', np.mean(cost_history)
         print 'Validating on S[', i, '] data'
         # correct_pred = tf.equal(tf.argmax(cnn, 1),
         #                         tf.argmax(output_holder, 1))
@@ -246,9 +246,9 @@ def train(cost, network_description, epsilon, max_updates, class_letter,
 
     print 'Training and validation completed'
     print 'Avg training accuracy:', np.mean(train_accuracy)
-    print 'Avg Training mode:', np.mean(cost_history)
+    print 'Avg Training Cost:', np.mean(cost_history)
     print 'Avg Validation accuracy:', np.mean(validation_accuracy)
-    print 'Avg Validation mode: ',np.mean(cost_validation_history)
+    print 'Avg Validation Cost: ',np.mean(cost_validation_history)
 
     session.close()
     # graph(s, tg, cost_per_epoch_history)
