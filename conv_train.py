@@ -256,7 +256,7 @@ def train(cost, network_description, epsilon, max_updates, class_letter,
     print "Validation cost:,", cost_validation_history
     session.close()
     graph(s, tg, cost_validation_history)
-    # graph(vg, cost_validation_history, "Validation cost graph")
+    # return(max_updates,np.mean(cost_history),np.mean(cost_validation_history))
 
 
 def test(network_def, model_file, test_folder, letter):

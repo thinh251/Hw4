@@ -15,9 +15,9 @@ start = datetime.datetime.now()
 for i in range(1, int(sys.argv[4])):
     a = datetime.datetime.now()
     print "-------------------------------------------"
-    print " for max updates : ", i * 10
+    print " for max updates : ", i * 5
     print "-------------------------------------------"
-    sys.argv[4] = i * 10
+    sys.argv[4] = i * 5
     results.append(conv_train.train(sys.argv[1], sys.argv[2],
                                     float(sys.argv[3]),
                                     int(sys.argv[4]), sys.argv[5].strip(),
@@ -49,5 +49,6 @@ plt.legend(handles=[training_line, validation_line], loc=2)
 end = datetime.datetime.now()
 print "Total time required " + str(end - start)
 plt.savefig(
-    "Q1. for '" + sys.argv[5].strip() + ", cost function:" + sys.argv[1])
+    "Q1. for '" + sys.argv[5].strip() + ", cost function:" + sys.argv[
+        1]+'.PNG')
 
