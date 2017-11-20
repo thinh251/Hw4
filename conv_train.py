@@ -92,7 +92,7 @@ def create_cnn(layers_def):
 
 
 def graph(x, y1, y2):
-    # plt.title(title)
+    plt.title("" + sys.argv[1]+"  "+sys.argv[3]+"  "+sys.argv[4])
     plt.xlabel("Max Updates")
     plt.ylabel("Cost")
     # plt.plot(x, y, color='blue', label="Training Cost", linestyle='dashed')
