@@ -251,7 +251,7 @@ def train(cost, network_description, epsilon, max_updates, class_letter,
     print 'Avg Validation mode: ',np.mean(cost_validation_history)
 
     session.close()
-    graph(s, tg, cost_per_epoch_history)
+    # graph(s, tg, cost_per_epoch_history)
     return(max_updates,np.mean(cost_history),np.mean(cost_validation_history))
     # graph(vg, cost_validation_history, "Validation cost graph")
 

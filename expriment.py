@@ -49,5 +49,6 @@ plt.legend(handles=[training_line, validation_line], loc=2)
 end = datetime.datetime.now()
 print "Total time required " + str(end - start)
 plt.savefig(
-    "Q1. for '" + sys.argv[5].strip() + ", cost function:" + sys.argv[1])
+    "Q1. for '" + sys.argv[5].strip() + ", cost function:" + sys.argv[
+        1]+'.PNG')
 
