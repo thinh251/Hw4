@@ -156,9 +156,9 @@ def train(cost, network_description, epsilon, max_updates, class_letter,
     validation_accuracy = []
     cost_history = []
     cost_validation_history = []
-    tg = []  # to draw training graph
-    s = []  # step in training graph
-    vg = []   #to draw validation graph
+    s = []  # step in  graph
+    tg = []  # training cost by step
+    vg = []   # validation cost by step
     for i in range(5):  # 5-fold
         # Pick the current Si as the subset for testing
         sl_i = slice(i * block, (i + 1) * block)
@@ -171,7 +171,7 @@ def train(cost, network_description, epsilon, max_updates, class_letter,
         train_y = np.delete(y, np.s_[i * block: (i + 1) * block], axis=0)
         # print 'Train Y:', i, train_y
         print 'Training on Si except S[', i, ']'
-        cost_per_epoch_history = []
+        cost_per_max_update_history = []
         for e in range(max_updates):  # an update is an epoch
 
             # shuffle the data before training
@@ -207,11 +207,12 @@ def train(cost, network_description, epsilon, max_updates, class_letter,
                 cost_value = session.run(cost, feed_dict=feed_data)
 
                 cost_history.append(cost_value)
-                cost_per_epoch_history.append(cost_value)
+                cost_per_max_update_history.append(cost_value)
                 # if e%10 ==0 :
                 #     print "max updates : "+ str(e)
                 #     print 'Training mode:', np.mean(train_accuracy)
-        tg.append(np.mean(cost_per_epoch_history))
+        # Each number of epoch time, save the training cost to draw the graph
+        tg.append(np.mean(cost_per_max_update_history))
         s.append((i + 1) * max_updates)
         print 'Training accuracy:', np.mean(train_accuracy)
         print 'Training mode:', np.mean(cost_history)
@@ -235,7 +236,8 @@ def train(cost, network_description, epsilon, max_updates, class_letter,
         cost_validation = session.run(cost, feed_dict={input_holder: test_x,
                                                        output_holder: test_y})
         cost_validation_history.append(cost_validation)
-        vg.append(i)
+        # Save the validation cost to draw the graph
+        vg.append(cost_validation)
         print "Validation Cost: ", cost_validation
         print 'Validation accuracy:', np.mean(validation_accuracy)
         print '-------------------------------'
@@ -248,10 +250,12 @@ def train(cost, network_description, epsilon, max_updates, class_letter,
     print 'Avg training accuracy:', np.mean(train_accuracy)
     print 'Avg Training mode:', np.mean(cost_history)
     print 'Avg Validation accuracy:', np.mean(validation_accuracy)
-    print 'Avg Validation mode: ',np.mean(cost_validation_history)
-
+    print 'Avg Validation mode: ', np.mean(cost_validation_history)
+    print "Step:", s
+    print "Train cost:", tg
+    print "Validation cost:,", cost_validation_history
     session.close()
-    graph(s, tg, cost_per_epoch_history)
+    graph(s, tg, cost_validation_history)
     # graph(vg, cost_validation_history, "Validation cost graph")
 
 
