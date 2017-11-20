@@ -255,10 +255,6 @@ def train(cost, network_description, epsilon, max_updates, class_letter,
     print "Step:", s
     print "Train cost:", tg
     print "Validation cost:,", cost_validation_history
-    #TODO: fix error in line below:
-    #print "Confusion Matrix:"+tf.contrib.metrics.confusion_matrix(tf.equal(
-    #   output_holder, 1.0),predict)
-
     session.close()
     graph(s, tg, cost_validation_history)
     # return(max_updates,np.mean(cost_history),np.mean(cost_validation_history))
@@ -284,7 +280,7 @@ def test(network_def, model_file, test_folder, letter):
 
     test_accuracy = session.run(accuracy, feed_dict={input_holder: test_x,
                                                      output_holder: test_y})
-    print 'Test accuracy:', test_accuracy
+    print 'Test accuracy: ', test_accuracy
 
 
 def test_graph(network_def, model_file, test_folder):
