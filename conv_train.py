@@ -143,7 +143,7 @@ def train(cost, network_description, epsilon, max_updates, class_letter,
                                                          weights_list=weights)
         cost_func = cost_func + penalty
     cost = tf.reduce_mean(cost_func)
-    optimizer = tf.train.GradientDescentOptimizer(epsilon).minimize(cost)
+    optimizer = tf.train.AdamOptimizer(epsilon).minimize(cost)
     session = tf.Session()
     init = tf.global_variables_initializer()
     session.run(init)
