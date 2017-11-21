@@ -1,8 +1,8 @@
 Contributors :
 
 Amer Rez
-Kunal Deshmukh
-Thinh Nguyen
+Kunal Deshmukh      012324741
+Thinh Nguyen        011014146
 
 
 About expriment.py file :
