@@ -5,16 +5,13 @@ Kunal Deshmukh      012324741
 Thinh Nguyen        011014146
 
 
-About expriment.py file :
-This file expects parameters as below :
-<cost> <network_description> <epsilon> <range_for_max_updates> <class_letter>
-<model_file_name> <train_folder_name>
+conv_train file takes the arguments as below :
+<mode> <network_description> <epsilon> <max_updates> <class_letter> <model_file_name> <data_folder>
 
-sample run:
-python expriment_1.py cross network_description 0.002 10 P model_file_1 data
+This file produces a graph for Q1 among other statistics like Training Cost,
+Validation cost as well as training and validation statistics.
 
-
-This file can be used to perform expriments.
-Following expriments are performed after execution of this file:
-* Plots a graph for max updates vs training cost and validation cost as
-requitred in Q1
+Possible modes are :
+cross,cross-l1,cross-l2,test. test mode is can be used to test a already
+developed model using test data.
+If test mode is used epsilon, max_updates will be required. 
