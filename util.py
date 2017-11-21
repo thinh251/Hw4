@@ -58,11 +58,3 @@ def load_images(data_folder, letter):
                     y.append(0.0)
     return x, y
 
-# folder = os.getcwd() + '/data'
-# x1, y1 = load_images(folder)
-# print x1, y1
-
-
-#test_layer = load_layers_definition('network_description')
-#print test_layer
-

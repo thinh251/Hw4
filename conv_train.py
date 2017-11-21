@@ -144,6 +144,7 @@ def train(cost, network_description, epsilon, max_updates, class_letter,
         cost_func = cost_func + penalty
     cost = tf.reduce_mean(cost_func)
     optimizer = tf.train.GradientDescentOptimizer(epsilon).minimize(cost)
+    #optimizer = tf.train.AdamOptimizer(epsilon).minimize(cost)
     session = tf.Session()
     init = tf.global_variables_initializer()
     session.run(init)
@@ -164,12 +165,8 @@ def train(cost, network_description, epsilon, max_updates, class_letter,
         sl_i = slice(i * block, (i + 1) * block)
         test_x = np.asarray(x[sl_i])
         test_y = np.asarray(y[sl_i])
-        # test_y = np.split(y, [i*k, (i + 1) * k], axis=0)
-        # print 'Test Y:', i, test_y
         train_x = np.delete(x, np.s_[i * block: (i + 1) * block], axis=0)
-        # print 'Train X:', i, train_x
         train_y = np.delete(y, np.s_[i * block: (i + 1) * block], axis=0)
-        # print 'Train Y:', i, train_y
         print 'Training on Si except S[', i, ']'
         cost_per_max_update_history = []
         for e in range(max_updates):  # an update is an epoch
@@ -196,29 +193,21 @@ def train(cost, network_description, epsilon, max_updates, class_letter,
                 batch_y = np.reshape(batch_y, (len(batch_y), 1))
                 feed_data = {input_holder: batch_x, output_holder: batch_y}
                 session.run(optimizer, feed_dict=feed_data)
-                # correct_pred = tf.equal(tf.argmax(cnn, 1),
-                #                         tf.argmax(output_holder, 1))
                 predict = tf.greater(cnn, threshold)
                 correct_pred = tf.equal(predict, tf.equal(output_holder, 1.0))
                 accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
                 accuracy = session.run(accuracy, feed_dict=feed_data)
-                # print 'Batch accuracy:', accuracy
                 train_accuracy.append(accuracy)
                 cost_value = session.run(cost, feed_dict=feed_data)
 
                 cost_history.append(cost_value)
                 cost_per_max_update_history.append(cost_value)
-                # if e%10 ==0 :
-                #     print "max updates : "+ str(e)
-                #     print 'Training mode:', np.mean(train_accuracy)
         # Each number of epoch time, save the training cost to draw the graph
         tg.append(np.mean(cost_per_max_update_history))
         s.append((i + 1) * max_updates)
         print 'Training accuracy:', np.mean(train_accuracy)
         print 'Training Cost:', np.mean(cost_history)
         print 'Validating on S[', i, '] data'
-        # correct_pred = tf.equal(tf.argmax(cnn, 1),
-        #                         tf.argmax(output_holder, 1))
         predict = tf.greater(cnn, threshold)
         correct_pred = tf.equal(predict, tf.equal(output_holder, 1.0))
         accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32),
@@ -228,7 +217,6 @@ def train(cost, network_description, epsilon, max_updates, class_letter,
         xsh = test_x.shape
         test_x = np.reshape(test_x, (xsh[0], xsh[1], xsh[2], 1))
         test_y = np.reshape(test_y, (len(test_y), 1))
-        # test_x = np.reshape(test_x, (len(test_x[0]), len(test_x[1]), 1))
         accuracy = session.run(accuracy,
                                feed_dict={input_holder: test_x,
                                           output_holder: test_y})
@@ -257,7 +245,7 @@ def train(cost, network_description, epsilon, max_updates, class_letter,
     print "Validation cost:,", cost_validation_history
     session.close()
     graph(s, tg, cost_validation_history)
-    # return(max_updates,np.mean(cost_history),np.mean(cost_validation_history))
+
 
 
 def test(network_def, model_file, test_folder, letter):
@@ -284,9 +272,6 @@ def test(network_def, model_file, test_folder, letter):
 
 
 def test_graph(network_def, model_file, test_folder):
-    # saver = tf.train.Saver()
-    # init = tf.global_variables_initializer()
-    # test_x, test_y = util.load_images(test_folder, by_letter=False)
     test_x, test_y = util.load_images(test_folder, letter=None)
     test_x = np.asarray(test_x, dtype=float)
     test_y = np.asarray(test_y)
