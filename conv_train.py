@@ -114,7 +114,7 @@ def validate_arguments(arguments):
                '<data_folder>')
         return False
     if not (arguments[1] in supported_modes):
-        print 'Invalid mode, supported supported_modes are', supported_modes
+        print 'Invalid mode, supported modes are:', supported_modes
         return False
     # TODO : add more detail for argument validation
     return True
@@ -215,7 +215,7 @@ def train(cost, network_description, epsilon, max_updates, class_letter,
         tg.append(np.mean(cost_per_max_update_history))
         s.append((i + 1) * max_updates)
         print 'Training accuracy:', np.mean(train_accuracy)
-        print 'Training mode:', np.mean(cost_history)
+        print 'Training cost:', np.mean(cost_history)
         print 'Validating on S[', i, '] data'
         # correct_pred = tf.equal(tf.argmax(cnn, 1),
         #                         tf.argmax(output_holder, 1))
@@ -248,12 +248,12 @@ def train(cost, network_description, epsilon, max_updates, class_letter,
 
     print 'Training and validation completed'
     print 'Avg training accuracy:', np.mean(train_accuracy)
-    print 'Avg Training mode:', np.mean(cost_history)
+    print 'Avg Training cost:', np.mean(cost_history)
     print 'Avg Validation accuracy:', np.mean(validation_accuracy)
-    print 'Avg Validation mode: ', np.mean(cost_validation_history)
+    print 'Avg Validation cost: ', np.mean(cost_validation_history)
     print "Step:", s
     print "Train cost:", tg
-    print "Validation cost:,", cost_validation_history
+    # print "Validation cost:,", cost_validation_history
     session.close()
     graph(s, tg, cost_validation_history)
     # return(max_updates,np.mean(cost_history),np.mean(cost_validation_history))
@@ -330,5 +330,3 @@ if __name__ == "__main__":
     else:
         train(mode, network_description, epsilon, max_updates, class_letter,
               model_file_name, data_folder)
-
-
